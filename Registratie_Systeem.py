@@ -10,17 +10,20 @@ try:
                         user='root',
                         password='usbw')
 except :
+    # print als er geen connectie mogelijk is
     print("Er is geen verbinding met de database")
 
+# class voor het login scherm
 class Login(tkinter.Tk):
     def __init__(self, parent):
         # constructor voor de tkinter
         tkinter.Tk.__init__(self, parent)
         # verwijzing naar de parent
         self.parent = parent
-        # roep de methode initialize aan
+        # roep de methode Loginwindow aan
         self.Loginwindow()
 
+    # maat de gui elementen aan voor het login scherm
     def Loginwindow(self):
         # verdele het form in een gid voor het possitioneren van de gui elementen
         self.grid()
@@ -51,10 +54,10 @@ class Login(tkinter.Tk):
     
     # registratie window wordt geopend
     def Regi_window(self):
-        #self.RegiWindow = tkinter.Toplevel(self.parent)
         self.app = Registratie(None)
         self.destroy()
-    
+
+    # Query naar de database voor het testen of de gebruiker credentials kloppen
     def GetUser(self):
         # waardes uit de entry boxen
         ID = self.Entry_Medewerker.get()
@@ -74,14 +77,15 @@ class Login(tkinter.Tk):
                     self.destroy()
         except :
             pass
-
+        
+# class voor het registratie form
 class Registratie(tkinter.Tk):
     def __init__(self, parent):
         # constructor voor de tkinter
         tkinter.Tk.__init__(self, parent)
         # verwijzing naar de parent
         self.parent = parent
-        # roep de methode initialize aan
+        # roep de methode Regi aan
         self.Regi()
 
     def Regi(self):
@@ -206,18 +210,20 @@ class Registratie(tkinter.Tk):
         self.tree.grid(column=2, row=2, columnspan=4, rowspan=10, sticky='nsew', padx=5)
         self.tree.bind("<Double-1>", self.OnDoubleClick)
 
+    # open het materiaal details form
     def OpenDetail(self):
         self.app = details(None)
         self.app.title('Batch registratie systeem')
 
+    # open het medewerker overzicht form
     def MedewerkerOverzicht(self):
         self.app = OverzichtMedewerkers(None)
         self.app.title('Medewerker overzicht')
 
+    # maak alle entry boxen leeg 
     def EmtyEntrybox(self):
         self.Entry_Batch.config(state = 'normal')
         self.Entry_Batch.delete(0, 'end')
-        self.Entry_Locatie.config(state = 'normal')
         self.Entry_Locatie.delete(0, 'end')
         self.Entry_Opslag.delete(0, 'end')
         self.Entry_Medewerker.delete(0, 'end')
@@ -227,6 +233,7 @@ class Registratie(tkinter.Tk):
         self.Entry_sloop.delete(0, 'end')
         self.Entry_voortgang.delete(0, 'end')
 
+    # Zodra er double geklikt wortd op een treeview row worden de waardes van die rij in de entry boxen geplaats
     def OnDoubleClick(self, event):
         self.EmtyEntrybox()
         # vul de entry boxen met de geselecteerde batch
@@ -242,11 +249,13 @@ class Registratie(tkinter.Tk):
         self.Entry_sloop.insert(0, self.tree.item(item)['values'][8]) 
         self.Entry_voortgang.insert(0, self.tree.item(item)['values'][9]) 
 
+    # Haal de Batch gegevens op uit de database
     def Getbatch(self):
         # de treeview leegmaken
         for row in self.tree.get_children():
             self.tree.delete(row)
 
+        # Open de database connectie
         cursor = conn.cursor()
         try:
             # voer de query uit
@@ -267,11 +276,13 @@ class Registratie(tkinter.Tk):
                                     INNER JOIN opslag o ON b.Opslag_ID = o.Opslag_ID
                                     INNER JOIN medewerker m ON b.Medewerker_ID = m.Medewerker_ID
                                     INNER JOIN recyclemateriaal r ON b.Recycle_ID = r.Recycle_ID""")
+            # voor iedere row voeg de elementen toe aan de treeview
             for row in cursor:
                 self.tree.insert('', 0, values=(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]))
         except :
             pass
 
+    # haal de gegeven uit de entryboxen en plaats deze in variablen
     def Getentry(self):
         self.batch = self.Entry_Batch.get()
         self.locatie = self.Entry_Locatie.get()
@@ -283,28 +294,35 @@ class Registratie(tkinter.Tk):
         self.sloop = self.Entry_sloop.get()
         self.voortgang = self.Entry_voortgang.get()      
 
+    # voeg een nieuwe batch toe aan de database
     def InsertBatch(self):
         self.Getentry()
-            # voer de query uit
+
+        # Ope de database connectie
         cursor = conn.cursor()
         try:
+            # voer de query uit
             cursor.execute("""insert into batch (Locatie_ID, Opslag_ID, Medewerker_ID, Recycle_ID, Aantal, Inkomst_Datum, Voortgang) 
                                 values (%s, %s, %s, %s, %s, %s, %s);""",(self.locatie, self.opslag, self.medewerker, self.recycle, self.aantal, self.inkom, self.voortgang))
             conn.commit()
+            # maak de entryboxen leeg
             self.EmtyEntrybox()
         except :
             pass
 
+    # update een bestaande batch
     def UpdateBatch(self):
         self.Getentry()
-            # voer de query uit
+        # open de database connectie
         cursor = conn.cursor()
         try:
+            # voer de query uit
             cursor.execute("""UPDATE batch 
                               SET Locatie_ID =%s, Opslag_ID =%s, Medewerker_ID =%s, Recycle_ID =%s, Aantal =%s, Inkomst_Datum =%s, Sloop_Datum =%s, Voortgang =%s
                               WHERE Batch_ID = %s
                               """,(self.locatie, self.opslag, self.medewerker, self.recycle, self.aantal, self.inkom, self.sloop,self.voortgang, self.batch))
             conn.commit()
+            # maak de entryboxen leeg 
             self.EmtyEntrybox()
         except :
             pass       
@@ -315,7 +333,7 @@ class details(tkinter.Tk):
         tkinter.Tk.__init__(self, parent)
         # verwijzing naar de parent
         self.parent = parent
-        # roep de methode initialize aan
+        # roep de methode Detailwindow aan
         self.DetailWindow()
 
     def DetailWindow(self):
@@ -376,20 +394,21 @@ class details(tkinter.Tk):
         self.tree.column('#0', width=0)
         self.tree.grid(column=2, row=2, columnspan=4, rowspan=10, sticky='nsew', pady=5, padx=5)
 
+    # Haal de materialen van een batch op en haal de totaal waarde van een batch op
     def GetMateriaal(self):
         # de treeview leegmaken
         for row in self.tree.get_children():
             self.tree.delete(row)
-
+        
         batch = self.Entry_Batch.get()
-
+        # open de dataabse connectie
         cursor = conn.cursor()
-        # voer de query uit
+        # voer de query voor de materiaalen uit een batch uit
         try:
             cursor.execute("""
                     SELECT
 	                    m.Materiaalsoort,
-                        m.Recyclebaar,
+                            m.Recyclebaar,
 	                    b.Kilogram,
 	                    round(d.Dagprijs * b.Kilogram,2) AS Waarde
                     FROM 
@@ -398,11 +417,13 @@ class details(tkinter.Tk):
 	                    INNER JOIN Dagprijs d on m.Materiaal_ID = d.Materiaal_ID
                     Where 
 	                    b.Batch_ID = %s""", [batch])
+            # voeg ieder element toe aan de treeview
             for row in cursor:
                 self.tree.insert('', 0, values=(row[0], row[1], row[2], row[3]))
         except :
             pass
 
+        # voer de Query voor de totaalwaarde van een batch uit
         try:
             cursor.execute("""
                     SELECT
@@ -413,6 +434,7 @@ class details(tkinter.Tk):
                         INNER JOIN Dagprijs d on m.Materiaal_ID = d.Materiaal_ID
                     WHERE
 	                    b.Batch_ID = %s""", [batch])
+            # voeg het resultaat toe aan de entrybox
             for row in cursor:
                 self.Entry_Totaal.config(state = 'normal')
                 self.Entry_Totaal.delete(0, 'end')
@@ -421,10 +443,12 @@ class details(tkinter.Tk):
         except :
             pass
 
+    # Voeg een materiaal toe aan een batch
     def InsertMateriaal(self):
-        Batch = int(self.Entry_Batch.get())
-        Materiaal = int(self.Entry_Materiaal.get())
-        Kilo = float(self.Entry_Kilo.get())
+        # haal de waardes uit de entry boxen
+        Batch = self.Entry_Batch.get()
+        Materiaal = self.Entry_Materiaal.get()
+        Kilo = self.Entry_Kilo.get()
         cursor = conn.cursor()
         # voer de query uit
         try:
@@ -434,6 +458,7 @@ class details(tkinter.Tk):
         except Exception as e:
             print(e)
 
+# class voor het overzicht van de werknemers
 class OverzichtMedewerkers(tkinter.Tk):
     def __init__(self, parent):
         # constructor voor de tkinter
@@ -477,7 +502,7 @@ class OverzichtMedewerkers(tkinter.Tk):
             self.tree.delete(row)
 
         self.datum = self.Entry_Datum.get()
-
+        # open de connectie naar de database
         cursor = conn.cursor()
         try:
             # voer de query uit
@@ -501,6 +526,7 @@ class OverzichtMedewerkers(tkinter.Tk):
 	                    m.Medewerker_ID, m.Naam
                     ORDER BY
 	                    Opbrengst ASC""", [self.datum])
+            # voeg ieder element toe aan de treeview
             for row in cursor:
                 self.tree.insert('', 0, values=(row[0], row[1]))
         except :
