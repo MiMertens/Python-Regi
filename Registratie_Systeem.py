@@ -417,7 +417,7 @@ class details(tkinter.Tk):
                 self.Entry_Totaal.config(state = 'normal')
                 self.Entry_Totaal.delete(0, 'end')
                 self.Entry_Totaal.insert(0, row[0])
-                self.Entry_Totaal.config(state = 'disabled')
+                self.Entry_Totaal.config(state='disabled')
         except :
             pass
 
